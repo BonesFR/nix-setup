@@ -1,0 +1,73 @@
+// niri config — https://github.com/YaLTeR/niri/wiki/Configuration:-Overview
+// Full option reference: https://yalter.github.io/niri/Configuration:-Introduction
+
+input {
+    keyboard {
+        xkb {
+            layout "us,kr"      // toggle to Korean layout once you're set up
+            options "grp:win_space_toggle"
+        }
+    }
+    touchpad {
+        tap
+        natural-scroll
+    }
+}
+
+output "eDP-1" {
+    // adjust to your actual output name (`niri msg outputs` after first login)
+    scale 1.0
+}
+
+// Autostart Noctalia shell on session launch
+spawn-at-startup "qs" "-c" "noctalia-shell"
+
+// swww for wallpaper daemon, since Noctalia's own wallpaper manager sits on top of it
+spawn-at-startup "swww-daemon"
+
+layout {
+    gaps 12
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring {
+        width 2
+    }
+}
+
+binds {
+    Mod+Return { spawn "ghostty"; }
+    Mod+D { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+    Mod+Q { close-window; }
+
+    Mod+Left  { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+H     { focus-column-left; }
+    Mod+L     { focus-column-right; }
+
+    Mod+Shift+Left  { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+
+    Mod+Shift+E { quit; }
+    Print { screenshot; }
+}
