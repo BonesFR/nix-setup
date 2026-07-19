@@ -83,7 +83,6 @@
   # Steam's launch wrapper per-game if you only want specific titles on the dGPU).
 
   environment.sessionVariables = {
-    QT_QUICK_BACKEND = "software";
     LIBVA_DRIVER_NAME = "nvidia"; # hardware video decode through the NVIDIA driver
   };
 

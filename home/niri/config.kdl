@@ -4,7 +4,7 @@
 input {
     keyboard {
         xkb {
-            layout "us,kr"      // toggle to Korean layout once you're set up
+            layout "fr,us,kr"      // toggle to Korean layout once you're set up
             options "grp:win_space_toggle"
         }
     }
@@ -20,7 +20,7 @@ output "eDP-1" {
 }
 
 // Autostart Noctalia shell on session launch
-spawn-at-startup "qs" "-c" "noctalia-shell"
+spawn-at-startup "noctalia-shell"
 
 // swww for wallpaper daemon, since Noctalia's own wallpaper manager sits on top of it
 spawn-at-startup "swww-daemon"

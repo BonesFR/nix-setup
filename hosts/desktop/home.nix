@@ -42,7 +42,7 @@
     bat
     ripgrep
     fzf
-    du-dust
+    dust
     bottom
     procs
     git-delta
