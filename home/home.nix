@@ -38,6 +38,13 @@
     enable = true;
     setAsDefaultBrowser = true;
   };
+  # stylix.targets.<app> for per-application home-manager programs (as
+  # opposed to system-level targets like console/gnome/regreet) only exists
+  # inside the home-manager module tree, not hosts/desktop/configuration.nix.
+  # Zen Browser's actual default profile name — check ~/.zen/profiles.ini if
+  # Zen's userChrome/userContent theming doesn't seem to apply, and correct
+  # this to match.
+  stylix.targets.zen-browser.profileNames = [ "default" ];
 
   # ---- Your CLI favorites from this whole conversation ----
   home.packages = with pkgs; [

@@ -60,11 +60,6 @@
     name = "Bibata-Modern-Ice";
     size = 24;
   };
-
-  # Zen Browser's actual default profile name — check ~/.zen/profiles.ini if
-  # Zen's userChrome/userContent theming doesn't seem to apply, and correct
-  # this to match.
-  stylix.targets.zen-browser.profileNames = [ "default" ];
   # This is also the fix for "mouse pointer is big and doesn't change on
   # hover" — apps only show correct hover/click cursor states when a real
   # cursor theme with those states is set system-wide via XCURSOR_THEME;
