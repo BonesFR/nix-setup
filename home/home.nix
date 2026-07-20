@@ -15,20 +15,16 @@
   home.stateVersion = "25.11";
 
   # ---- Noctalia shell ----
+  # Theming is intentionally left to Stylix here: once programs.noctalia.enable
+  # is true, Stylix's own noctalia-shell target (auto-enabled, see
+  # stylix.targets in configuration.nix) sets programs.noctalia.settings.theme
+  # itself — a hand-mapped "stylix" custom palette built from the exact same
+  # base16 colors used everywhere else, plus mode from stylix.polarity. Setting
+  # theme.* here too would conflict with that (two definitions of the same
+  # option) — Stylix's version is already the more coherent, pixel-matched one.
   programs.noctalia = {
     enable = true;
     # Full option list: https://docs.noctalia.dev
-    settings = {
-      # Noctalia manages its own palette independently of Stylix, so it needs
-      # an explicit matching scheme or it drifts from the rest of the desktop.
-      # "Catppuccin" + dark mode renders the Mocha variant, matching Stylix's
-      # catppuccin-mocha.yaml base16 scheme in configuration.nix.
-      theme = {
-        mode = "dark";
-        source = "builtin";
-        builtin = "Catppuccin";
-      };
-    };
   };
 
   # ---- niri config file ----
