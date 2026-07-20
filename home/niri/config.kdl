@@ -30,8 +30,9 @@ spawn-at-startup "noctalia-shell"
 // Vicinae runs as a background daemon; Mod+Space toggles its window
 spawn-at-startup "vicinae"
 
-// swww for wallpaper daemon, since Noctalia's own wallpaper manager sits on top of it
-spawn-at-startup "swww-daemon"
+// Polkit authentication agent — needed for GUI privilege prompts (Dolphin
+// mounting drives, NetworkManager, etc.); niri has no compositor built-in one.
+spawn-at-startup "hyprpolkitagent"
 
 layout {
     gaps 12
@@ -47,8 +48,8 @@ layout {
 
     focus-ring {
         width 2
-        active.color "#cba6f7"    // Catppuccin Mocha mauve — replaces the default bright blue
-        inactive.color "#585b70"  // subtle, low-contrast when unfocused
+        active-color "#cba6f7"    // Catppuccin Mocha mauve — replaces the default bright blue
+        inactive-color "#585b70"  // subtle, low-contrast when unfocused
     }
 }
 
@@ -64,7 +65,7 @@ window-rule {
 binds {
     Mod+Return { spawn "ghostty"; }
     Mod+D { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
-    Mod+Space { spawn "vicinae" "toggle"; } // verify subcommand with `vicinae --help` if this doesn't work — daemon/toggle is the common pattern but wasn't independently confirmed
+    Mod+Space { spawn "vicinae" "vicinae://toggle"; }
     Mod+L { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "lockScreen" "lock"; }
     Mod+Q { close-window; }
 

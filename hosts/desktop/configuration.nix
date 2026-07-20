@@ -11,6 +11,9 @@
   # integration, theming support, and reliable Windows EFI detection.
   boot.loader.limine.enable = true;
   boot.loader.limine.maxGenerations = 10; # keep last 10 generations in the menu
+  # note: with a small shared ESP (~200M), a high generation count can fill it up
+  # over time (each kept generation keeps its own kernel/initrd) — dial this down
+  # if `/boot` ever runs out of space.
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot"; # confirm this matches your EFI partition mount
 
@@ -29,10 +32,39 @@
     LC_TIME = "ko_KR.UTF-8"; # dates/currency formats once you're in Korea
   };
   i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "ko_KR.UTF-8/UTF-8" ];
+  console.keyMap = "fr"; # AZERTY for plain TTYs — separate from niri's xkb layout below
 
   # ---- niri session ----
   # niri is packaged directly in nixpkgs unstable.
   programs.niri.enable = true;
+
+  # ---- Stylix: one color scheme, applied coherently everywhere ----
+  # This is the real fix for "no coherence between window headers" and
+  # "Noctalia looks dark and ugly" — instead of theming GTK, Qt, the cursor,
+  # fish, and starship separately (and having them drift out of sync), Stylix
+  # derives all of them from one base16 scheme automatically.
+  stylix.enable = true;
+  stylix.polarity = "dark";
+  stylix.base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+  # Catppuccin Mocha — dark purple/lavender palette. Swap this file for any
+  # scheme in pkgs.base16-schemes if you want to try others later (browse:
+  # nix eval nixpkgs#base16-schemes --apply builtins.attrNames).
+
+  stylix.cursor = {
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Ice";
+    size = 24;
+  };
+  # This is also the fix for "mouse pointer is big and doesn't change on
+  # hover" — apps only show correct hover/click cursor states when a real
+  # cursor theme with those states is set system-wide via XCURSOR_THEME;
+  # without one, apps fall back to a single generic (large) X cursor.
+
+  # Noctalia's own Quickshell UI manages its own wallpaper-driven color
+  # scheme separately (see programs.noctalia.settings in home.nix) — Stylix
+  # here covers everything else: GTK apps, Qt apps (Dolphin), the terminal,
+  # fish, and starship, so the whole desktop feels like one coherent set
+  # rather than five apps each doing their own thing.
 
   # Noctalia's own greeter: runs its own lightweight wlroots compositor
   # (rather than depending on GTK theming like regreet), and can sync your
@@ -42,7 +74,15 @@
     enable = true;
     greeter-args = "--session niri";
     settings = {
-      keyboard = { layout = "us,kr"; };
+      keyboard = { layout = "us,fr,kr"; };
+      output = {
+        width = 1920;  # confirmed from your laptop's Full HD panel — change if wrong
+        height = 1080;
+      };
+      cursor = {
+        theme = "Bibata-Modern-Ice";
+        size = 24;
+      };
     };
   };
   # After first login: Settings → Shell → Security → Noctalia Greeter →
@@ -84,6 +124,10 @@
 
   environment.sessionVariables = {
     LIBVA_DRIVER_NAME = "nvidia"; # hardware video decode through the NVIDIA driver
+    QT_QUICK_BACKEND = "software"; # Noctalia/Quickshell renders invisibly with the default
+                                    # GPU-accelerated Qt Quick backend on this NVIDIA setup —
+                                    # confirmed via testing, revisit if a newer nvidia-open
+                                    # driver or Quickshell release fixes the underlying issue.
   };
 
   # ---- Fingerprint reader ----
@@ -131,7 +175,7 @@
   programs.fish.enable = true;
 
   # ---- Users ----
-  # CHANGE "bonobones" here to match flake.nix and home/home.nix
+  # must match flake.nix and home/home.nix
   users.users.tibo = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" "audio" ];

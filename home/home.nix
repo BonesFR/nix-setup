@@ -5,6 +5,9 @@
     # Noctalia's Home Manager module — declaratively configures the shell itself
     # (color scheme, bar modules, panels) instead of hand-editing its settings file.
     inputs.noctalia.homeModules.default
+    # Zen Browser — "beta" is the actively-updated channel; swap for "twilight"
+    # or "twilight-official" if you want the more bleeding-edge builds instead.
+    inputs.zen-browser.homeModules.beta
   ];
 
   home.username = "tibo"; # CHANGE to match flake.nix / configuration.nix
@@ -16,9 +19,15 @@
     enable = true;
     # Full option list: https://docs.noctalia.dev
     settings = {
-      # Example: swap to a different accent scheme. Leave default to start,
-      # tweak once you see it running.
-      # colorScheme = "dynamic"; # generates palette from your current wallpaper
+      # Noctalia manages its own palette independently of Stylix, so it needs
+      # an explicit matching scheme or it drifts from the rest of the desktop.
+      # "Catppuccin" + dark mode renders the Mocha variant, matching Stylix's
+      # catppuccin-mocha.yaml base16 scheme in configuration.nix.
+      theme = {
+        mode = "dark";
+        source = "builtin";
+        builtin = "Catppuccin";
+      };
     };
   };
 
@@ -29,9 +38,10 @@
   xdg.configFile."niri/config.kdl".source = ./niri/config.kdl;
 
   # ---- Zen Browser ----
-  # Not yet in nixpkgs as a first-class package everywhere; if `pkgs.zen-browser`
-  # isn't found when you build, grab it from a community flake instead
-  # (e.g. github:MarceColl/zen-browser-flake) and add it as another flake input.
+  programs.zen-browser = {
+    enable = true;
+    setAsDefaultBrowser = true;
+  };
 
   # ---- Your CLI favorites from this whole conversation ----
   home.packages = with pkgs; [
@@ -41,6 +51,7 @@
     atuin
     bat
     ripgrep
+    fd
     fzf
     dust
     bottom
@@ -49,29 +60,66 @@
     tokei
     hyperfine
     just
-    ghostty
-    firefox
+    firefox               # kept as a fallback/compat browser alongside Zen
 
     # New this round
-    vicinae               # launcher — packaged directly in nixpkgs now
+    vicinae               # launcher — packaged directly in nixpkgs now; also
+                           # provides built-in clipboard history + emoji picker
     kdePackages.dolphin    # file manager
     kdePackages.ark        # archive tool, Dolphin's default "extract" action expects this
-    wl-clipboard           # wl-copy / wl-paste — Wayland clipboard CLI
-    cliphist                # clipboard history
+    wl-clipboard           # wl-copy / wl-paste — Wayland clipboard CLI, used by the `clip` fish function
 
     # GUI extras discussed earlier
     mission-center
     # bazaar is Flatpak-distributed rather than packaged in nixpkgs;
     # enable Flatpak support below if you want it.
+
+    # ---- Desktop essentials that were missing ----
+    hyprpolkitagent        # GUI polkit auth agent (drive mounting, NetworkManager, etc.)
+                           # — despite the Hypr-branded name, works fine on niri/any wlroots
+                           # compositor; if prompts don't appear, fall back to
+                           # lxqt.lxqt-policykit-agent instead.
+    xwayland-satellite     # X11 app compatibility — niri (25.08+) auto-spawns this
+                           # on demand once it's on $PATH, no further config needed.
+
+    # ---- Modern CLI tooling, fits the eza/bat/dust/fd aesthetic already established ----
+    yazi                   # terminal file manager with image previews
+    lazygit                # terminal git UI
+    zellij                 # terminal multiplexer
+    comma                  # `, <cmd>` — run any nixpkgs program ad-hoc without installing it
+    papirus-icon-theme     # actual GTK icon theme (nothing set one before)
+    satty                  # screenshot annotation, pairs with niri's Print binding
+
+    (pkgs.callPackage ./packages/echo-music-desktop.nix { }) # "Echoes" — ad-free YouTube Music client
   ];
+
+  # nh — nicer nixos-rebuild/home-manager-switch wrapper with pretty diffs
+  programs.nh = {
+    enable = true;
+    flake = "/home/tibo/nix-setup";
+  };
+
+  # icon theme — Stylix themes colors/cursor/fonts but doesn't pick an icon set
+  gtk.enable = true;
+  gtk.iconTheme = {
+    package = pkgs.papirus-icon-theme;
+    name = "Papirus-Dark";
+  };
 
   # Flatpak, for apps like Bazaar / anything not in nixpkgs
   # (enable the system service in configuration.nix: services.flatpak.enable = true;)
 
   programs.git = {
     enable = true;
-    userName = "Your Name";
-    userEmail = "you@example.com";
+    userName = "bonobones";
+    userEmail = "mrbones0528@gmail.com";
+  };
+
+  # Bare package + niri's Mod+Return bind used to launch ghostty with zero
+  # config; a real program module gives Stylix a config file to theme.
+  programs.ghostty = {
+    enable = true;
+    enableFishIntegration = true;
   };
 
   programs.fish = {
@@ -108,8 +156,11 @@
       gp = "git push";
       gl = "git log --oneline --graph --decorate";
       gd = "git diff";
-      rebuild = "sudo nixos-rebuild switch --flake ~/nixos-config#desktop";
-      update = "cd ~/nixos-config && nix flake update && cd -";
+      # nh (nix-community/nh, enabled below with programs.nh.flake already
+      # pointed at ~/nix-setup) wraps nixos-rebuild/nix flake update with
+      # pretty generation diffs.
+      rebuild = "nh os switch";
+      update = "nh os update";
     };
 
     plugins = [
@@ -139,6 +190,34 @@
   programs.fzf.enable = true;
   programs.fzf.enableFishIntegration = true;
   programs.starship.enable = true;
+
+  # carapace — cross-shell completion engine, noticeably richer tab-completion
+  # for many CLIs beyond fish's own built-in completions.
+  programs.carapace = {
+    enable = true;
+    enableFishIntegration = true;
+  };
+
+  # nix-index — searchable database of every file in every nixpkgs package;
+  # powers a "command not found -> here's the package" hint, and backs `comma`
+  # (the `,` command in home.packages) for running programs ad-hoc.
+  programs.nix-index = {
+    enable = true;
+    enableFishIntegration = true;
+  };
+
+  # Auto-lock on idle and before suspend — Noctalia has no reliable built-in
+  # idle-timeout lock (confirmed buggy in its own issue tracker), so this
+  # covers it with the same IPC command Mod+L already uses.
+  services.swayidle = {
+    enable = true;
+    timeouts = [
+      { timeout = 300; command = "qs -c noctalia-shell ipc call lockScreen lock"; }
+    ];
+    events = [
+      { event = "before-sleep"; command = "qs -c noctalia-shell ipc call lockScreen lock"; }
+    ];
+  };
 
   home.sessionVariables = {
     EDITOR = "nvim";
