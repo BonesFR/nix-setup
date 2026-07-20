@@ -9,11 +9,9 @@
 # `nix-prefetch-url <new-url>` for the new sha256, or build with a dummy hash
 # and copy the "got: sha256-..." value Nix reports on mismatch.
 #
-# Known risk: the .desktop/icon filenames below are inferred from the
-# community AUR package for this same upstream project, not independently
-# confirmed from the AppImage's real contents. If extraInstallCommands fails,
-# run `appimageTools.extract` manually and inspect the result for the real
-# filenames.
+# The .desktop/icon filenames inside the AppImage aren't hardcoded here —
+# they're discovered at build time with `find`, since the first guess
+# (echo-music-desktop.desktop) turned out to be wrong for the real AppImage.
 { lib, pkgs, fetchurl, appimageTools }:
 
 let
@@ -31,9 +29,27 @@ appimageTools.wrapType2 {
   extraPkgs = pkgs: with pkgs; [ mpv gtk3 hicolor-icon-theme ];
 
   extraInstallCommands = ''
-    install -m 444 -D ${appimageContents}/echo-music-desktop.desktop $out/share/applications/echo-music-desktop.desktop
-    substituteInPlace $out/share/applications/echo-music-desktop.desktop \
-      --replace 'Exec=AppRun' 'Exec=${pname}'
+    desktopFile=$(find ${appimageContents} -maxdepth 2 -iname '*.desktop' | head -n1)
+    if [ -z "$desktopFile" ]; then
+      echo "echo-music-desktop: no .desktop file found inside the AppImage — inspect ${appimageContents} manually" >&2
+      exit 1
+    fi
+
+    install -m 444 -D "$desktopFile" "$out/share/applications/${pname}.desktop"
+    # Rewrite whatever the Exec/Icon lines actually said to our wrapped binary name
+    # and installed icon, regardless of what the upstream .desktop file used.
+    sed -i \
+      -e "s|^Exec=.*|Exec=${pname}|" \
+      -e "s|^Icon=.*|Icon=${pname}|" \
+      "$out/share/applications/${pname}.desktop"
+
+    iconFile=$(find ${appimageContents} -maxdepth 3 \( -iname '*.png' -o -iname '*.svg' \) | head -n1)
+    if [ -n "$iconFile" ]; then
+      ext=''${iconFile##*.}
+      install -m 444 -D "$iconFile" "$out/share/icons/hicolor/256x256/apps/${pname}.$ext"
+    else
+      echo "echo-music-desktop: no icon file found inside the AppImage — app will use a generic icon" >&2
+    fi
   '';
 
   meta = with lib; {

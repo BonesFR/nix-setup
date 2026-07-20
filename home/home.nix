@@ -107,8 +107,10 @@
 
   programs.git = {
     enable = true;
-    userName = "bonobones";
-    userEmail = "mrbones0528@gmail.com";
+    settings.user = {
+      name = "bonobones";
+      email = "mrbones0528@gmail.com";
+    };
   };
 
   # Bare package + niri's Mod+Return bind used to launch ghostty with zero
@@ -210,10 +212,15 @@
     timeouts = [
       { timeout = 300; command = "qs -c noctalia-shell ipc call lockScreen lock"; }
     ];
-    events = [
-      { event = "before-sleep"; command = "qs -c noctalia-shell ipc call lockScreen lock"; }
-    ];
+    events = {
+      before-sleep = "qs -c noctalia-shell ipc call lockScreen lock";
+    };
   };
+
+  # home-manager now requires this explicitly rather than inferring it from
+  # other pointerCursor fields being set (Stylix sets package/name/size at the
+  # NixOS level via stylix.cursor in configuration.nix).
+  home.pointerCursor.enable = true;
 
   home.sessionVariables = {
     EDITOR = "nvim";

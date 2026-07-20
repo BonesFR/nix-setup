@@ -26,7 +26,12 @@
   networking.hostName = "desktop"; # must match the name in flake.nix
   networking.networkmanager.enable = true;
 
-  time.timeZone = "Asia/Seoul"; # set ahead of the move — change now, or later, your call
+  # Auto-detect timezone from location instead of a hardcoded one — sets
+  # time.timeZone = null itself (via mkDefault) and pulls in geoclue2
+  # automatically; a plain `time.timeZone = "...";` here would silently win
+  # over that and defeat auto-detection, so don't add one back.
+  services.automatic-timezoned.enable = true;
+
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_TIME = "ko_KR.UTF-8"; # dates/currency formats once you're in Korea
@@ -55,6 +60,11 @@
     name = "Bibata-Modern-Ice";
     size = 24;
   };
+
+  # Zen Browser's actual default profile name — check ~/.zen/profiles.ini if
+  # Zen's userChrome/userContent theming doesn't seem to apply, and correct
+  # this to match.
+  stylix.targets.zen-browser.profileNames = [ "default" ];
   # This is also the fix for "mouse pointer is big and doesn't change on
   # hover" — apps only show correct hover/click cursor states when a real
   # cursor theme with those states is set system-wide via XCURSOR_THEME;
