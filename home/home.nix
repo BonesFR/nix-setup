@@ -45,12 +45,19 @@
     dust
     bottom
     procs
+    git-delta
     tokei
     hyperfine
     just
     ghostty
     firefox
-    noctalia-shell
+
+    # New this round
+    vicinae               # launcher — packaged directly in nixpkgs now
+    kdePackages.dolphin    # file manager
+    kdePackages.ark        # archive tool, Dolphin's default "extract" action expects this
+    wl-clipboard           # wl-copy / wl-paste — Wayland clipboard CLI
+    cliphist                # clipboard history
 
     # GUI extras discussed earlier
     mission-center
@@ -63,8 +70,8 @@
 
   programs.git = {
     enable = true;
-    userName = "bonobones";
-    userEmail = "mrbones0528@gmail.com";
+    userName = "Your Name";
+    userEmail = "you@example.com";
   };
 
   programs.fish = {
@@ -113,6 +120,11 @@
       # in a background/unfocused terminal — handy for slow rebuilds.
       { name = "done"; src = pkgs.fishPlugins.done.src; }
     ];
+
+    functions = {
+      # Usage: cat file.txt | clip   — copies stdin straight to the clipboard
+      clip = "wl-copy";
+    };
   };
 
   # wire up the CLI tools' shell integrations
@@ -120,6 +132,10 @@
   programs.zoxide.enableFishIntegration = true;
   programs.atuin.enable = true;
   programs.atuin.enableFishIntegration = true;
+  # Disables atuin's takeover of up-arrow and Ctrl+R — you get plain fish
+  # history on up-arrow, and fzf-fish (already configured) owns Ctrl+R
+  # instead, which is the search experience you said you preferred.
+  programs.atuin.flags = [ "--disable-up-arrow" "--disable-ctrl-r" ];
   programs.fzf.enable = true;
   programs.fzf.enableFishIntegration = true;
   programs.starship.enable = true;

@@ -7,8 +7,8 @@
     inputs.noctalia.homeModules.default
   ];
 
-  home.username = "yourusername"; # CHANGE to match flake.nix / configuration.nix
-  home.homeDirectory = "/home/yourusername";
+  home.username = "tibo"; # CHANGE to match flake.nix / configuration.nix
+  home.homeDirectory = "/home/tibo";
   home.stateVersion = "25.11";
 
   # ---- Noctalia shell ----

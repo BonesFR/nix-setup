@@ -10,7 +10,7 @@
   # Limine is the modern bootloader CachyOS defaults to — BTRFS snapshot
   # integration, theming support, and reliable Windows EFI detection.
   boot.loader.limine.enable = true;
-  boot.loader.limine.maxGenerations = 10; # keep last 10 generations in the menu
+  boot.loader.limine.maxGenerations = 3; # small shared ESP (200M) — keep this low, especially with NVIDIA initrd size
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot"; # confirm this matches your EFI partition mount
 
@@ -25,6 +25,7 @@
 
   time.timeZone = "Asia/Seoul"; # set ahead of the move — change now, or later, your call
   i18n.defaultLocale = "en_US.UTF-8";
+  console.keyMap = "fr"; # AZERTY for plain TTYs — separate from niri's xkb layout below
   i18n.extraLocaleSettings = {
     LC_TIME = "ko_KR.UTF-8"; # dates/currency formats once you're in Korea
   };
@@ -34,15 +35,48 @@
   # niri is packaged directly in nixpkgs unstable.
   programs.niri.enable = true;
 
-  # Noctalia's own greeter: runs its own lightweight wlroots compositor
-  # (rather than depending on GTK theming like regreet), and can sync your
-  # wallpaper + color palette straight from the shell so the login screen
-  # actually matches your desktop. Enables and configures greetd for you.
+  # ---- Stylix: one color scheme, applied coherently everywhere ----
+  # This is the real fix for "no coherence between window headers" and
+  # "Noctalia looks dark and ugly" — instead of theming GTK, Qt, the cursor,
+  # fish, and starship separately (and having them drift out of sync), Stylix
+  # derives all of them from one base16 scheme automatically.
+  stylix.enable = true;
+  stylix.polarity = "dark";
+  stylix.base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+  # Catppuccin Mocha — dark purple/lavender palette, close to the Caelestia
+  # look you liked. Swap this file for any scheme in pkgs.base16-schemes if
+  # you want to try others later (browse: nix eval nixpkgs#base16-schemes --apply builtins.attrNames).
+
+  stylix.cursor = {
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Ice";
+    size = 24;
+  };
+  # This is also the fix for "mouse pointer is big and doesn't change on
+  # hover" — apps only show correct hover/click cursor states when a real
+  # cursor theme with those states is set system-wide via XCURSOR_THEME;
+  # without one, apps fall back to a single generic (large) X cursor.
+
+  # Noctalia's own Quickshell UI manages its own wallpaper-driven color
+  # scheme separately (see programs.noctalia.settings in home.nix) — Stylix
+  # here covers everything else: GTK apps, Qt apps (Dolphin), the terminal,
+  # fish, and starship, so the whole desktop feels like one coherent set
+  # rather than five apps each doing their own thing.
+
+  # ---- Noctalia Greeter: fix stretched resolution ----
   programs.noctalia-greeter = {
     enable = true;
     greeter-args = "--session niri";
     settings = {
-      keyboard = { layout = "us,kr"; };
+      keyboard = { layout = "us,fr,kr"; };
+      output = {
+        width = 1920;  # confirmed from your laptop's Full HD panel — change if wrong
+        height = 1080;
+      };
+      cursor = {
+        theme = "Bibata-Modern-Ice";
+        size = 24;
+      };
     };
   };
   # After first login: Settings → Shell → Security → Noctalia Greeter →
@@ -83,8 +117,11 @@
   # Steam's launch wrapper per-game if you only want specific titles on the dGPU).
 
   environment.sessionVariables = {
-    QT_QUICK_BACKEND = "software";
     LIBVA_DRIVER_NAME = "nvidia"; # hardware video decode through the NVIDIA driver
+    QT_QUICK_BACKEND = "software"; # Noctalia/Quickshell renders invisibly with the default
+                                    # GPU-accelerated Qt Quick backend on this NVIDIA setup —
+                                    # confirmed via testing, revisit if a newer nvidia-open
+                                    # driver or Quickshell release fixes the underlying issue.
   };
 
   # ---- Fingerprint reader ----
@@ -114,7 +151,7 @@
   fonts.packages = with pkgs; [
     noto-fonts-cjk-sans
     noto-fonts-cjk-serif
-    noto-fonts-color-emoji
+    noto-fonts-emoji
     pretendard # popular, very legible Korean/Latin variable font
     nerd-fonts.jetbrains-mono # for terminal/bar icons (Nerd Font glyphs)
   ];
@@ -129,10 +166,13 @@
     ];
   };
 
+  # ---- Users ----
+  # CHANGE "tibo" here to match flake.nix and home/home.nix
+  # Required for users.users.*.shell = pkgs.fish to be valid — this is a
+  # system-level registration, separate from home-manager's programs.fish
+  # (which only sets up fish's *config*, not that it's an allowed login shell).
   programs.fish.enable = true;
 
-  # ---- Users ----
-  # CHANGE "bonobones" here to match flake.nix and home/home.nix
   users.users.tibo = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" "audio" ];

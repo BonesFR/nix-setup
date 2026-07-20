@@ -25,6 +25,11 @@
       url = "github:noctalia-dev/noctalia-greeter";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    stylix = {
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, noctalia, ... }@inputs:
@@ -41,13 +46,14 @@
         modules = [
           ./hosts/desktop/configuration.nix
           inputs.noctalia-greeter.nixosModules.default
+          inputs.stylix.nixosModules.stylix
 
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = { inherit inputs; };
-            # CHANGE "bonobones" to your actual username, here and in
+            # CHANGE "tibo" to your actual username, here and in
             # hosts/desktop/configuration.nix
             home-manager.users.tibo = import ./home/home.nix;
           }

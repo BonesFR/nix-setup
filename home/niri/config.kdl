@@ -1,10 +1,15 @@
 // niri config — https://github.com/YaLTeR/niri/wiki/Configuration:-Overview
 // Full option reference: https://yalter.github.io/niri/Configuration:-Introduction
 
+// Strip client-side window decorations for a consistent, borderless look
+// across GTK/Qt apps — this is the fix for "no coherence between window
+// headers", since different toolkits draw wildly different titlebars otherwise.
+prefer-no-csd
+
 input {
     keyboard {
         xkb {
-            layout "fr,us,kr"      // toggle to Korean layout once you're set up
+            layout "us,fr,kr"      // AZERTY (fr) added — toggle cycles through all three
             options "grp:win_space_toggle"
         }
     }
@@ -21,6 +26,9 @@ output "eDP-1" {
 
 // Autostart Noctalia shell on session launch
 spawn-at-startup "noctalia-shell"
+
+// Vicinae runs as a background daemon; Mod+Space toggles its window
+spawn-at-startup "vicinae"
 
 // swww for wallpaper daemon, since Noctalia's own wallpaper manager sits on top of it
 spawn-at-startup "swww-daemon"
@@ -39,18 +47,29 @@ layout {
 
     focus-ring {
         width 2
+        active.color "#cba6f7"    // Catppuccin Mocha mauve — replaces the default bright blue
+        inactive.color "#585b70"  // subtle, low-contrast when unfocused
     }
+}
+
+// Rounded corners on every window, clipped so content doesn't poke out past
+// them — this is the fix for the focus ring appearing square behind rounded
+// corners; without clip-to-geometry, the ring is drawn to the window's actual
+// (square) bounds regardless of the visual corner radius.
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
 }
 
 binds {
     Mod+Return { spawn "ghostty"; }
     Mod+D { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+    Mod+Space { spawn "vicinae" "toggle"; } // verify subcommand with `vicinae --help` if this doesn't work — daemon/toggle is the common pattern but wasn't independently confirmed
+    Mod+L { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "lockScreen" "lock"; }
     Mod+Q { close-window; }
 
     Mod+Left  { focus-column-left; }
     Mod+Right { focus-column-right; }
-    Mod+H     { focus-column-left; }
-    Mod+L     { focus-column-right; }
 
     Mod+Shift+Left  { move-column-left; }
     Mod+Shift+Right { move-column-right; }
