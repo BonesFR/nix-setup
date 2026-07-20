@@ -56,7 +56,7 @@
     dust
     bottom
     procs
-    git-delta
+    delta                  # nixpkgs attribute for the git-delta project
     tokei
     hyperfine
     just
