@@ -24,11 +24,21 @@ output "eDP-1" {
     scale 1.0
 }
 
-// Autostart Noctalia shell on session launch
-spawn-at-startup "noctalia-shell"
+// Update the systemd/D-Bus activation environment as early as possible —
+// several autostarted things (the polkit agent, xdg-desktop-portal,
+// vicinae's systemd service) rely on WAYLAND_DISPLAY and friends already
+// being visible to systemd/dbus activation, not just this process's own env.
+spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "XDG_CURRENT_DESKTOP=niri"
 
-// Vicinae runs as a background daemon; Mod+Space toggles its window
-spawn-at-startup "vicinae"
+// Autostart Noctalia shell on session launch — this runs through Quickshell
+// (`qs`) with the noctalia-shell config, NOT a standalone "noctalia-shell"
+// binary (that binary doesn't exist, which is why this never actually
+// started before).
+spawn-at-startup "qs" "-c" "noctalia-shell"
+
+// Vicinae's daemon is now started by its own systemd user service (see
+// programs.vicinae.systemd.enable in home.nix) rather than spawned here —
+// Mod+Space's bind still just talks to it as a client.
 
 // Polkit authentication agent — needed for GUI privilege prompts (Dolphin
 // mounting drives, NetworkManager, etc.); niri has no compositor built-in one.

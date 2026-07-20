@@ -80,10 +80,15 @@
     greeter-args = "--session niri";
     settings = {
       keyboard = { layout = "us,fr,kr"; };
-      output = {
-        width = 1920;  # confirmed from your laptop's Full HD panel — change if wrong
-        height = 1080;
-      };
+      # No [output].width/height override: the earlier hardcoded 1920x1080
+      # guess was never actually confirmed against the real panel, and forcing
+      # a non-native DRM mode is exactly what causes a stretched/blurry
+      # picture when the panel's real resolution differs. Leaving this unset
+      # lets the greeter fall back to the panel's own preferred/native mode.
+      # If you want to pin an exact mode later (e.g. for a specific refresh
+      # rate), get the real values with `niri msg outputs` from inside a
+      # working session first, then set both width and height together —
+      # partial overrides are ignored.
       cursor = {
         theme = "Bibata-Modern-Ice";
         size = 24;

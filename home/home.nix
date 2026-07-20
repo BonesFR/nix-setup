@@ -8,6 +8,11 @@
     # Zen Browser — "beta" is the actively-updated channel; swap for "twilight"
     # or "twilight-official" if you want the more bleeding-edge builds instead.
     inputs.zen-browser.homeModules.beta
+    # Vicinae's own module (note: homeManagerModules, not homeModules — a
+    # different naming convention than noctalia/zen-browser's flakes) — sets
+    # up the systemd user service that runs `vicinae server`. Without this,
+    # there's no daemon and no socket for the CLI/keybind to connect to.
+    inputs.vicinae.homeManagerModules.default
   ];
 
   home.username = "tibo"; # CHANGE to match flake.nix / configuration.nix
@@ -32,6 +37,18 @@
   # `programs.niri.settings` module, but plain KDL is more stable right now
   # and every online example you find will be in this format).
   xdg.configFile."niri/config.kdl".source = ./niri/config.kdl;
+
+  # ---- Vicinae launcher ----
+  # `enable` alone only installs the package — `systemd.enable` is what
+  # actually runs `vicinae server` as a user service, which is what creates
+  # the socket that `vicinae vicinae://toggle` (Mod+Space) connects to. This
+  # binds to graphical-session.target by default, which niri's own
+  # `niri --session` launch (used automatically via the NixOS niri module's
+  # session entry) already activates — no extra wiring needed for that part.
+  programs.vicinae = {
+    enable = true;
+    systemd.enable = true;
+  };
 
   # ---- Zen Browser ----
   programs.zen-browser = {
@@ -66,8 +83,6 @@
     firefox               # kept as a fallback/compat browser alongside Zen
 
     # New this round
-    vicinae               # launcher — packaged directly in nixpkgs now; also
-                           # provides built-in clipboard history + emoji picker
     kdePackages.dolphin    # file manager
     kdePackages.ark        # archive tool, Dolphin's default "extract" action expects this
     wl-clipboard           # wl-copy / wl-paste — Wayland clipboard CLI, used by the `clip` fish function

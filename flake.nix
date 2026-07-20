@@ -38,6 +38,15 @@
         home-manager.follows = "home-manager";
       };
     };
+
+    # The nixpkgs `vicinae` package alone is just the binary — it doesn't
+    # provision the systemd user service that runs `vicinae server`, which is
+    # what actually creates the socket the `vicinae` CLI/keybind talks to.
+    # This flake's own home-manager module does that properly.
+    vicinae = {
+      url = "github:vicinaehq/vicinae";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, noctalia, ... }@inputs:
